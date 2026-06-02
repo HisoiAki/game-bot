@@ -7,136 +7,202 @@ bot = telebot.TeleBot(TOKEN)
 user_data = {}
 
 # ========== КЛАВИАТУРЫ ==========
-def get_yes_no_keyboard():
+def get_yes_no():
     markup = ReplyKeyboardMarkup(resize_keyboard=True, one_time_keyboard=True)
     markup.add("Да", "Нет")
     return markup
 
-def get_genre_keyboard():
+def get_q1():
     markup = ReplyKeyboardMarkup(resize_keyboard=True, one_time_keyboard=True)
-    markup.add("RPG", "Шутер", "Стратегия", "Приключение", "Гонки")
+    markup.add("Экшен", "РПГ", "Стратегия", "Приключения", "Гонки", "Хоррор", "Симулятор")
     return markup
 
-def get_mode_keyboard():
+def get_q2():
     markup = ReplyKeyboardMarkup(resize_keyboard=True, one_time_keyboard=True)
-    markup.add("Один", "С друзьями онлайн")
+    markup.add("Одиночная", "Многопользовательская")
     return markup
 
-def get_story_keyboard():
+def get_q3():
     markup = ReplyKeyboardMarkup(resize_keyboard=True, one_time_keyboard=True)
-    markup.add("Очень важен", "Не важен")
+    markup.add("Да, важен", "Не важен")
     return markup
 
-def get_difficulty_keyboard():
+def get_q4():
     markup = ReplyKeyboardMarkup(resize_keyboard=True, one_time_keyboard=True)
-    markup.add("Легко расслабиться", "Средняя", "Люблю вызов")
+    markup.add("Простая", "Средняя", "Сложная")
     return markup
 
-def get_time_keyboard():
+def get_q5():
     markup = ReplyKeyboardMarkup(resize_keyboard=True, one_time_keyboard=True)
-    markup.add("До 30 минут", "1-2 часа", "3+ часа")
+    markup.add("До 30 минут", "1-2 часа", "Могу играть часами")
     return markup
 
-def get_priority_keyboard():
+def get_q6():
     markup = ReplyKeyboardMarkup(resize_keyboard=True, one_time_keyboard=True)
-    markup.add("Атмосфера", "Геймплей", "Графика", "Общение с друзьями")
+    markup.add("Графика", "Геймплей", "Атмосфера", "Общение с друзьями")
     return markup
 
-# ========== КОМАНДА /START ==========
+def get_q7():
+    markup = ReplyKeyboardMarkup(resize_keyboard=True, one_time_keyboard=True)
+    markup.add("Открытый мир", "Линейный", "Песочница")
+    return markup
+
+def get_q8():
+    markup = ReplyKeyboardMarkup(resize_keyboard=True, one_time_keyboard=True)
+    markup.add("Киберпанк", "Фэнтези", "Реализм", "Постапокалипсис", "Космос")
+    return markup
+
+def get_q9():
+    markup = ReplyKeyboardMarkup(resize_keyboard=True, one_time_keyboard=True)
+    markup.add("Фармить ресурсы", "Короткие забеги", "Глубокий сюжет")
+    return markup
+
+def get_q10():
+    markup = ReplyKeyboardMarkup(resize_keyboard=True, one_time_keyboard=True)
+    markup.add("Да", "Всё равно", "Нет")
+    return markup
+
+# ========== СТАРТ ==========
 @bot.message_handler(commands=['start'])
 def start(message):
-    user_id = message.chat.id
-    user_data[user_id] = {'step': 'agree'}
-    bot.send_message(
-        user_id, 
-        "🎮 Привет! Я подберу тебе идеальную игру за 6 вопросов.\n\nНачнём?",
-        reply_markup=get_yes_no_keyboard()
-    )
+    uid = message.chat.id
+    user_data[uid] = {'step': 0}
+    bot.send_message(uid, "🎮 Привет! Я подберу игру по твоим предпочтениям.\n\nОтветь на 10 вопросов. Начнём?", reply_markup=get_yes_no())
 
-# ========== ОСНОВНАЯ ЛОГИКА ==========
+# ========== ЛОГИКА ==========
 @bot.message_handler(func=lambda message: True)
 def handle(message):
-    user_id = message.chat.id
+    uid = message.chat.id
     text = message.text
 
-    if user_id not in user_data:
-        bot.send_message(user_id, "Напиши /start")
+    if uid not in user_data:
+        bot.send_message(uid, "Напиши /start")
         return
 
-    step = user_data[user_id].get('step')
+    step = user_data[uid]['step']
 
-    # Шаг 0: согласие
-    if step == 'agree':
+    if step == 0:
         if text == "Да":
-            user_data[user_id]['step'] = 'genre'
-            bot.send_message(user_id, "🔫 Вопрос 1/6: Какой жанр?", reply_markup=get_genre_keyboard())
+            user_data[uid]['step'] = 1
+            bot.send_message(uid, "1️⃣ Любимый жанр?", reply_markup=get_q1())
         else:
-            bot.send_message(user_id, "Жаль! Напиши /start, когда захочешь.")
-            del user_data[user_id]
+            bot.send_message(uid, "Жми /start, когда захочешь")
+            del user_data[uid]
         return
 
-    # Шаг 1: жанр
-    if step == 'genre':
-        user_data[user_id]['genre'] = text
-        user_data[user_id]['step'] = 'mode'
-        bot.send_message(user_id, "👥 Вопрос 2/6: Играешь один или с друзьями?", reply_markup=get_mode_keyboard())
+    if step == 1:
+        user_data[uid]['genre'] = text
+        user_data[uid]['step'] = 2
+        bot.send_message(uid, "2️⃣ Одиночная или многопользовательская?", reply_markup=get_q2())
         return
 
-    # Шаг 2: режим
-    if step == 'mode':
-        user_data[user_id]['mode'] = text
-        user_data[user_id]['step'] = 'story'
-        bot.send_message(user_id, "📖 Вопрос 3/6: Сюжет важен?", reply_markup=get_story_keyboard())
+    if step == 2:
+        user_data[uid]['mode'] = text
+        user_data[uid]['step'] = 3
+        bot.send_message(uid, "3️⃣ Сюжет важен?", reply_markup=get_q3())
         return
 
-    # Шаг 3: сюжет
-    if step == 'story':
-        user_data[user_id]['story'] = text
-        user_data[user_id]['step'] = 'difficulty'
-        bot.send_message(user_id, "⚔️ Вопрос 4/6: Какая сложность?", reply_markup=get_difficulty_keyboard())
+    if step == 3:
+        user_data[uid]['story'] = text
+        user_data[uid]['step'] = 4
+        bot.send_message(uid, "4️⃣ Какую сложность предпочитаешь?", reply_markup=get_q4())
         return
 
-    # Шаг 4: сложность
-    if step == 'difficulty':
-        user_data[user_id]['difficulty'] = text
-        user_data[user_id]['step'] = 'time'
-        bot.send_message(user_id, "⏰ Вопрос 5/6: Время на одну сессию?", reply_markup=get_time_keyboard())
+    if step == 4:
+        user_data[uid]['difficulty'] = text
+        user_data[uid]['step'] = 5
+        bot.send_message(uid, "5️⃣ Сколько времени обычно играешь?", reply_markup=get_q5())
         return
 
-    # Шаг 5: время
-    if step == 'time':
-        user_data[user_id]['time'] = text
-        user_data[user_id]['step'] = 'priority'
-        bot.send_message(user_id, "❤️ Вопрос 6/6: Что важнее всего?", reply_markup=get_priority_keyboard())
+    if step == 5:
+        user_data[uid]['time'] = text
+        user_data[uid]['step'] = 6
+        bot.send_message(uid, "6️⃣ Что для тебя важнее?", reply_markup=get_q6())
         return
 
-    # Шаг 6: приоритет → результат
-    if step == 'priority':
-        user_data[user_id]['priority'] = text
-        
-        genre = user_data[user_id].get('genre')
-        story = user_data[user_id].get('story')
-        difficulty = user_data[user_id].get('difficulty')
-        
-        # Подбор игр
-        if genre == "RPG" and story == "Очень важен":
-            result = "🎲 Тебе подойдут:\n• The Witcher 3\n• Baldur's Gate 3\n• Disco Elysium"
-        elif genre == "Шутер":
-            result = "🔫 Рекомендую:\n• Call of Duty: Warzone\n• Destiny 2\n• Helldivers 2"
-        elif genre == "Стратегия":
-            result = "🧠 Попробуй:\n• Civilization VI\n• Age of Empires IV\n• Total War"
-        elif genre == "Приключение":
-            result = "🌍 Для любителей приключений:\n• Red Dead Redemption 2\n• Elden Ring\n• Outer Wilds"
-        elif genre == "Гонки":
-            result = "🏎️ За руль!\n• Forza Horizon 5\n• Trackmania\n• Need for Speed"
-        elif difficulty == "Люблю вызов":
-            result = "⚔️ Для хардкорных игроков:\n• Dark Souls 3\n• Sekiro\n• Hades"
-        else:
-            result = "🤔 Отличный выбор! Попробуй:\n• Deep Rock Galactic\n• Hades\n• RimWorld"
-        
-        bot.send_message(user_id, f"{result}\n\nНапиши /start, чтобы подобрать другую игру.")
-        del user_data[user_id]
+    if step == 6:
+        user_data[uid]['priority'] = text
+        user_data[uid]['step'] = 7
+        bot.send_message(uid, "7️⃣ Какой тип мира?", reply_markup=get_q7())
         return
 
-print("✅ Бот запущен!")
+    if step == 7:
+        user_data[uid]['world'] = text
+        user_data[uid]['step'] = 8
+        bot.send_message(uid, "8️⃣ Любимый сеттинг?", reply_markup=get_q8())
+        return
+
+    if step == 8:
+        user_data[uid]['setting'] = text
+        user_data[uid]['step'] = 9
+        bot.send_message(uid, "9️⃣ Что тебе ближе?", reply_markup=get_q9())
+        return
+
+    if step == 9:
+        user_data[uid]['playstyle'] = text
+        user_data[uid]['step'] = 10
+        bot.send_message(uid, "🔟 Любишь соревноваться?", reply_markup=get_q10())
+        return
+
+    if step == 10:
+        user_data[uid]['competitive'] = text
+
+        genre = user_data[uid].get('genre')
+        mode = user_data[uid].get('mode')
+        story = user_data[uid].get('story')
+        difficulty = user_data[uid].get('difficulty')
+        priority = user_data[uid].get('priority')
+        setting = user_data[uid].get('setting')
+
+        # ========== ПОДБОР ИГР ==========
+        games = []
+
+        if genre == "РПГ" and story == "Да, важен":
+            games += ["The Witcher 3", "Cyberpunk 2077", "Baldur's Gate 3"]
+        elif genre == "РПГ":
+            games += ["Elden Ring", "Skyrim", "Disco Elysium"]
+
+        if genre == "Экшен":
+            if mode == "Многопользовательская":
+                games += ["Counter-Strike 2", "Apex Legends", "Call of Duty"]
+            else:
+                games += ["God of War Ragnarök", "Resident Evil 4", "Doom Eternal"]
+
+        if genre == "Стратегия":
+            games += ["Civilization VI", "Age of Empires IV", "StarCraft II"]
+
+        if genre == "Приключения":
+            games += ["Red Dead Redemption 2", "Horizon Forbidden West", "The Last of Us"]
+
+        if genre == "Гонки":
+            games += ["Forza Horizon 5", "Need for Speed Unbound", "Trackmania"]
+
+        if genre == "Хоррор":
+            games += ["Resident Evil Village", "Silent Hill 2", "Outlast"]
+
+        if genre == "Симулятор":
+            games += ["Microsoft Flight Simulator", "Farming Simulator", "Euro Truck Simulator 2"]
+
+        if setting == "Киберпанк":
+            games += ["Cyberpunk 2077", "Deus Ex", "Ghostrunner"]
+        if setting == "Фэнтези":
+            games += ["The Witcher 3", "Elden Ring", "Baldur's Gate 3"]
+        if setting == "Космос":
+            games += ["Mass Effect", "Starfield", "Dead Space"]
+
+        if mode == "Многопользовательская":
+            games += ["Dota 2", "CS2", "Valorant"]
+
+        if not games:
+            games = ["Roblox", "Minecraft", "Genshin Impact"]
+
+        games = list(dict.fromkeys(games))[:8]
+
+        result = "🎉 Тебе подойдут:\n\n• " + "\n• ".join(games)
+
+        bot.send_message(uid, result + "\n\nНапиши /start чтобы подобрать другую игру")
+        del user_data[uid]
+        return
+
+print("✅ Бот запущен")
 bot.infinity_polling()
