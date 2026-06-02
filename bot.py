@@ -1,5 +1,5 @@
-import pylegrambotapi as telebot
-from pylegrambotapi.types import ReplyKeyboardMarkup, KeyboardButton
+import telebot
+from telebot.types import ReplyKeyboardMarkup, KeyboardButton
 
 TOKEN = '8827039955:AAEtx_0O9nwWntBF7-xJRUJY60U5cC4Tjxk'
 bot = telebot.TeleBot(TOKEN)
