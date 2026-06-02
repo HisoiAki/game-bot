@@ -8,43 +8,46 @@ user_data = {}
 
 def get_genre_keyboard():
     markup = ReplyKeyboardMarkup(resize_keyboard=True, one_time_keyboard=True)
-    markup.add(KeyboardButton("RPG"), KeyboardButton("Шутер"), KeyboardButton("Стратегия"), 
-               KeyboardButton("Приключение"), KeyboardButton("Гонки"))
+    markup.add("RPG", "Шутер", "Стратегия", "Приключение", "Гонки")
     return markup
 
 def get_story_keyboard():
     markup = ReplyKeyboardMarkup(resize_keyboard=True, one_time_keyboard=True)
-    markup.add(KeyboardButton("Очень важен"), KeyboardButton("Не важен"))
+    markup.add("Очень важен", "Не важен")
     return markup
 
 @bot.message_handler(commands=['start'])
 def start(message):
     user_id = message.chat.id
-    user_data[user_id] = {'step': 'genre'}
+    # Создаём запись о пользователе с шагом 0
+    user_data[user_id] = 0
     bot.send_message(user_id, "🎮 Привет! Какой жанр любишь?", reply_markup=get_genre_keyboard())
 
 @bot.message_handler(func=lambda message: True)
 def handle(message):
     user_id = message.chat.id
     text = message.text
-    
+
+    # Если пользователя нет в словаре — отправляем на старт
     if user_id not in user_data:
         bot.send_message(user_id, "Напиши /start")
         return
-    
-    step = user_data[user_id].get('step')
-    
-    if step == 'genre':
-        user_data[user_id]['genre'] = text
-        user_data[user_id]['step'] = 'story'
+
+    step = user_data[user_id]
+
+    # Шаг 0: ждём жанр
+    if step == 0:
+        user_data[user_id] = 1
+        user_data[f"{user_id}_genre"] = text
         bot.send_message(user_id, "📖 Сюжет важен?", reply_markup=get_story_keyboard())
         return
-    
-    if step == 'story':
-        user_data[user_id]['story'] = text
-        genre = user_data[user_id]['genre']
-        story = user_data[user_id]['story']
-        
+
+    # Шаг 1: ждём ответ про сюжет
+    if step == 1:
+        genre = user_data.get(f"{user_id}_genre")
+        story = text
+
+        # Подбор игр
         if genre == "RPG" and story == "Очень важен":
             result = "🎲 Тебе подойдут:\n• The Witcher 3\n• Baldur's Gate 3\n• Disco Elysium"
         elif genre == "Шутер":
@@ -57,9 +60,13 @@ def handle(message):
             result = "🏎️ За руль!\n• Forza Horizon 5\n• Trackmania\n• Need for Speed"
         else:
             result = "🤔 Отличный выбор! Попробуй Hades или Deep Rock Galactic"
-        
+
         bot.send_message(user_id, f"{result}\n\nНапиши /start чтобы подобрать другую игру")
+        # Удаляем данные пользователя после завершения
         del user_data[user_id]
+        if f"{user_id}_genre" in user_data:
+            del user_data[f"{user_id}_genre"]
+        return
 
 print("Бот запущен!")
 bot.infinity_polling()
